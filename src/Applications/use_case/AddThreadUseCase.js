@@ -1,4 +1,4 @@
-import NewThread from '../../Domains/threads/entities/NewThread';
+import NewThread from '../../Domains/threads/entities/NewThread.js';
 
 class AddThreadUseCase {
   constructor({ threadRepository }) {

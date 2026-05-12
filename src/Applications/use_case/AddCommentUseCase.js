@@ -1,4 +1,4 @@
-import NewComment from '../../Domains/comments/entities/NewComment';
+import NewComment from '../../Domains/comments/entities/NewComment.js';
 
 class AddCommentUseCase {
   constructor({ commentRepository, threadRepository }) {
