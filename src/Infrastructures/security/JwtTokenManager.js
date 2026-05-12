@@ -1,6 +1,7 @@
 import AuthenticationTokenManager from '../../Applications/security/AuthenticationTokenManager.js';
 import config from '../../Commons/config.js';
 import InvariantError from '../../Commons/exceptions/InvariantError.js';
+import AuthenticationError from '../../Commons/exceptions/AuthenticationError.js';
 
 class JwtTokenManager extends AuthenticationTokenManager {
   constructor(jwt) {
@@ -27,6 +28,14 @@ class JwtTokenManager extends AuthenticationTokenManager {
   async decodePayload(token) {
     const payload = this._jwt.decode(token);
     return payload;
+  }
+
+  async verifyAccessToken(token) {
+    try {
+      this._jwt.verify(token, config.auth.accessTokenKey);
+    } catch (error) {
+      throw new AuthenticationError('Missing authentication');
+    }
   }
 }
 
