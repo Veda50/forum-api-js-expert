@@ -11,6 +11,11 @@ describe('AddThreadUseCase', () => {
       body: 'abc',
       owner: 'user-123',
     };
+    const dummyAddedThread = new AddedThread({
+      id: 'thread-123',
+      title: useCasePayload.title,
+      owner: useCasePayload.owner,
+    });
     const expectedAddedThread = new AddedThread({
       id: 'thread-123',
       title: useCasePayload.title,
@@ -22,7 +27,7 @@ describe('AddThreadUseCase', () => {
 
     /** mocking needed function */
     mockThreadRepository.addThread = vi.fn()
-      .mockImplementation(() => Promise.resolve(expectedAddedThread));
+      .mockImplementation(() => Promise.resolve(dummyAddedThread));
 
     /** creating use case instance */
     const getThreadUseCase = new AddThreadUseCase({

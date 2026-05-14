@@ -12,6 +12,11 @@ describe('AddCommentUseCase', () => {
       threadId: 'thread-123',
       owner: 'user-123',
     };
+    const dummyAddedComment = new AddedComment({
+      id: 'comment-123',
+      content: useCasePayload.content,
+      owner: useCasePayload.owner,
+    });
     const expectedAddedComment = new AddedComment({
       id: 'comment-123',
       content: useCasePayload.content,
@@ -26,7 +31,7 @@ describe('AddCommentUseCase', () => {
     mockThreadRepository.verifyThreadExists = vi.fn()
       .mockImplementation(() => Promise.resolve());
     mockCommentRepository.addComment = vi.fn()
-      .mockImplementation(() => Promise.resolve(expectedAddedComment));
+      .mockImplementation(() => Promise.resolve(dummyAddedComment));
 
     /** creating use case instance */
     const getCommentUseCase = new AddCommentUseCase({

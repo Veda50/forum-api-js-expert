@@ -14,6 +14,11 @@ describe('AddReplyUseCase', () => {
       threadId: 'thread-123',
       owner: 'user-123',
     };
+    const dummyAddedReply = new AddedReply({
+      id: 'reply-123',
+      content: useCasePayload.content,
+      owner: useCasePayload.owner,
+    });
     const expectedAddedReply = new AddedReply({
       id: 'reply-123',
       content: useCasePayload.content,
@@ -31,7 +36,7 @@ describe('AddReplyUseCase', () => {
     mockCommentRepository.verifyCommentExists = vi.fn()
       .mockImplementation(() => Promise.resolve());
     mockReplyRepository.addReply = vi.fn()
-      .mockImplementation(() => Promise.resolve(expectedAddedReply));
+      .mockImplementation(() => Promise.resolve(dummyAddedReply));
 
     /** creating use case instance */
     const addReplyUseCase = new AddReplyUseCase({
