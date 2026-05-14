@@ -40,6 +40,13 @@ describe('GetThreadDetailUseCase', () => {
         content: 'abc',
         is_delete: false,
       },
+      {
+        id: 'reply-456',
+        username: 'dicoding',
+        date: '2023',
+        content: 'abc',
+        is_delete: true,
+      },
     ];
 
     /** creating dependency of use case */
@@ -85,6 +92,12 @@ describe('GetThreadDetailUseCase', () => {
               date: '2023',
               content: 'abc',
             },
+            {
+              id: 'reply-456',
+              username: 'dicoding',
+              date: '2023',
+              content: '**balasan telah dihapus**',
+            },
           ],
         },
         {
@@ -98,6 +111,12 @@ describe('GetThreadDetailUseCase', () => {
               username: 'johndoe',
               date: '2023',
               content: 'abc',
+            },
+            {
+              id: 'reply-456',
+              username: 'dicoding',
+              date: '2023',
+              content: '**balasan telah dihapus**',
             },
           ],
         },
