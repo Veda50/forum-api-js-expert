@@ -1,0 +1,63 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password123
+          POSTGRES_DB: forumapi_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Run Migrations on Test DB
+        run: npm run migrate:test -- up
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: password123
+          PGDATABASE: forumapi_test
+          PGPORT: 5432
+
+      - name: Run Tests
+        run: npm run test
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: password123
+          PGDATABASE: forumapi_test
+          PGPORT: 5432
+          ACCESS_TOKEN_KEY: 8b7b4ef375716ab08b2a3951b29d52fc00b1c855f9d1a847229b8c5935bef56d9d271e76a9cf08e614300395c3b90ebe559cf968a0741b18c9505549394b2c70
+          REFRESH_TOKEN_KEY: 5078605e074a462b1460608fcbe0d0963c644402e04ad334455ff5a856cb43fd99825861dde02957d5e3184c90c532ca7d0249df20fe93d535632f3d11be7bad
+          ACCCESS_TOKEN_AGE: 3000
