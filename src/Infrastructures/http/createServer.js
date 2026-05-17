@@ -11,6 +11,8 @@ import replies from '../../Interfaces/http/api/replies/index.js';
 const createServer = async (container) => {
   const app = express();
 
+  app.set('trust proxy', true);
+
   app.use(rateLimiter(90, 60000));
 
   app.use(express.json());
