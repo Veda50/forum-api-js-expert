@@ -1,6 +1,7 @@
 import express from 'express';
 import ClientError from '../../Commons/exceptions/ClientError.js';
 import DomainErrorTranslator from '../../Commons/exceptions/DomainErrorTranslator.js';
+import rateLimiter from '../../Interfaces/http/middlewares/rateLimiter.js';
 import users from '../../Interfaces/http/api/users/index.js';
 import authentications from '../../Interfaces/http/api/authentications/index.js';
 import threads from '../../Interfaces/http/api/threads/index.js';
@@ -10,7 +11,10 @@ import replies from '../../Interfaces/http/api/replies/index.js';
 const createServer = async (container) => {
   const app = express();
 
-  // Middleware for parsing JSON
+  app.set('trust proxy', true);
+
+  app.use(rateLimiter(90, 60000));
+
   app.use(express.json());
 
   // Register routes

@@ -2,6 +2,9 @@ import request from 'supertest';
 import pool from '../../database/postgres/pool.js';
 import UsersTableTestHelper from '../../../../tests/UsersTableTestHelper.js';
 import AuthenticationsTableTestHelper from '../../../../tests/AuthenticationsTableTestHelper.js';
+import ThreadsTableTestHelper from '../../../../tests/ThreadsTableTestHelper.js';
+import CommentsTableTestHelper from '../../../../tests/CommentsTableTestHelper.js';
+import LikesTableTestHelper from '../../../../tests/LikesTableTestHelper.js';
 import container from '../../container.js';
 import createServer from '../createServer.js';
 import AuthenticationTokenManager from '../../../Applications/security/AuthenticationTokenManager.js';
@@ -12,6 +15,9 @@ describe('HTTP server', () => {
   });
 
   afterEach(async () => {
+    await LikesTableTestHelper.cleanTable();
+    await CommentsTableTestHelper.cleanTable();
+    await ThreadsTableTestHelper.cleanTable();
     await UsersTableTestHelper.cleanTable();
     await AuthenticationsTableTestHelper.cleanTable();
   });
@@ -321,7 +327,6 @@ describe('HTTP server', () => {
   });
 
   it('should handle server error correctly', async () => {
-    // Arrange
     const requestPayload = {
       username: 'dicoding',
       fullname: 'Dicoding Indonesia',
@@ -329,12 +334,146 @@ describe('HTTP server', () => {
     };
     const app = await createServer({});
 
-    // Action
     const response = await request(app).post('/users').send(requestPayload);
 
-    // Assert
     expect(response.status).toEqual(500);
     expect(response.body.status).toEqual('error');
     expect(response.body.message).toEqual('terjadi kegagalan pada server kami');
+  });
+
+  describe('when PUT /threads/:threadId/comments/:commentId/likes', () => {
+    it('should response 401 when request is not authenticated', async () => {
+      const app = await createServer(container);
+
+      const response = await request(app).put('/threads/thread-123/comments/comment-123/likes').send();
+
+      expect(response.status).toEqual(401);
+      expect(response.body.status).toEqual('fail');
+      expect(response.body.message).toBeDefined();
+    });
+
+    it('should response 404 when thread does not exist', async () => {
+      const app = await createServer(container);
+
+      await request(app).post('/users').send({
+        username: 'user123',
+        password: 'secret',
+        fullname: 'User 123',
+      });
+      const loginResponse = await request(app).post('/authentications').send({
+        username: 'user123',
+        password: 'secret',
+      });
+      const { accessToken } = loginResponse.body.data;
+
+      const response = await request(app)
+        .put('/threads/thread-123/comments/comment-123/likes')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+
+      expect(response.status).toEqual(404);
+      expect(response.body.status).toEqual('fail');
+      expect(response.body.message).toBeDefined();
+    });
+
+    it('should response 404 when comment does not exist', async () => {
+      const app = await createServer(container);
+
+      await request(app).post('/users').send({
+        username: 'user123',
+        password: 'secret',
+        fullname: 'User 123',
+      });
+      const loginResponse = await request(app).post('/authentications').send({
+        username: 'user123',
+        password: 'secret',
+      });
+      const { accessToken } = loginResponse.body.data;
+
+      const userResult = await pool.query("SELECT id FROM users WHERE username = 'user123'");
+      const userId = userResult.rows[0].id;
+
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123', owner: userId });
+
+      const response = await request(app)
+        .put('/threads/thread-123/comments/comment-123/likes')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+
+      expect(response.status).toEqual(404);
+      expect(response.body.status).toEqual('fail');
+      expect(response.body.message).toBeDefined();
+    });
+
+    it('should response 200 and like the comment successfully when not liked yet', async () => {
+      const app = await createServer(container);
+
+      await request(app).post('/users').send({
+        username: 'user123',
+        password: 'secret',
+        fullname: 'User 123',
+      });
+      const loginResponse = await request(app).post('/authentications').send({
+        username: 'user123',
+        password: 'secret',
+      });
+      const { accessToken } = loginResponse.body.data;
+
+      const userResult = await pool.query("SELECT id FROM users WHERE username = 'user123'");
+      const userId = userResult.rows[0].id;
+
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123', owner: userId });
+      await CommentsTableTestHelper.addComment({ id: 'comment-123', threadId: 'thread-123', owner: userId });
+
+      const response = await request(app)
+        .put('/threads/thread-123/comments/comment-123/likes')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+
+      expect(response.status).toEqual(200);
+      expect(response.body.status).toEqual('success');
+
+      const likes = await LikesTableTestHelper.findLikeByCommentAndUser({
+        commentId: 'comment-123',
+        userId,
+      });
+      expect(likes).toHaveLength(1);
+    });
+
+    it('should response 200 and unlike the comment successfully when already liked', async () => {
+      const app = await createServer(container);
+
+      await request(app).post('/users').send({
+        username: 'user123',
+        password: 'secret',
+        fullname: 'User 123',
+      });
+      const loginResponse = await request(app).post('/authentications').send({
+        username: 'user123',
+        password: 'secret',
+      });
+      const { accessToken } = loginResponse.body.data;
+
+      const userResult = await pool.query("SELECT id FROM users WHERE username = 'user123'");
+      const userId = userResult.rows[0].id;
+
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123', owner: userId });
+      await CommentsTableTestHelper.addComment({ id: 'comment-123', threadId: 'thread-123', owner: userId });
+      await LikesTableTestHelper.addLike({ id: 'like-123', commentId: 'comment-123', owner: userId });
+
+      const response = await request(app)
+        .put('/threads/thread-123/comments/comment-123/likes')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send();
+
+      expect(response.status).toEqual(200);
+      expect(response.body.status).toEqual('success');
+
+      const likes = await LikesTableTestHelper.findLikeByCommentAndUser({
+        commentId: 'comment-123',
+        userId,
+      });
+      expect(likes).toHaveLength(0);
+    });
   });
 });
