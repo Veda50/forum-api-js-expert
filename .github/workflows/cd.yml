@@ -15,7 +15,9 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/forum-api-starter-project
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            cd /home/ubuntu/forum-api-js-expert
             git pull origin main
             npm install --production
             npm run migrate -- up
