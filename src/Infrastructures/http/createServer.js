@@ -13,7 +13,7 @@ const createServer = async (container) => {
 
   app.set('trust proxy', true);
 
-  app.use(rateLimiter(90, 60000));
+  app.use(rateLimiter(120, 60000));
 
   app.use(express.json());
 
