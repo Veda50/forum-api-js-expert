@@ -10,10 +10,10 @@ const authMiddleware = (container) => async (req, res, next) => {
 
     const token = authHeader.replace('Bearer ', '');
     const tokenManager = container.getInstance(AuthenticationTokenManager.name);
-    
+
     await tokenManager.verifyAccessToken(token);
     const { id, username } = await tokenManager.decodePayload(token);
-    
+
     req.user = { id, username };
     next();
   } catch (error) {
