@@ -2,7 +2,7 @@ const rateLimitMap = new Map();
 
 const rateLimiter = (limit = 90, timeframeMs = 60000) => {
   return (req, res, next) => {
-    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const ip = (req.headers && req.headers['x-forwarded-for']) || req.ip || (req.socket && req.socket.remoteAddress);
     const now = Date.now();
 
     if (!rateLimitMap.has(ip)) {
