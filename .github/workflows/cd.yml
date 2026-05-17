@@ -8,6 +8,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Deploy via Render Webhook
-        run: |
-          curl -f -X POST "${{ secrets.RENDER_DEPLOY_WEBHOOK_URL }}"
+      - name: Deploy via SSH to AWS EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/forum-api-starter-project
+            git pull origin main
+            npm install --production
+            npm run migrate -- up
+            pm2 restart forum-api
